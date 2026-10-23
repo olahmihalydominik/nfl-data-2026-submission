@@ -1,0 +1,77 @@
+# Pipeline-wide parameters. Everything tunable lives here, never as literals in code.
+# Spec: .ignored_plans/SILVER_GOLD_PLAN.md §2.1
+
+schemas:
+  bronze: bronze
+  silver: silver
+  gold: gold
+
+raw_files:
+  # bronze table name -> file name(s) in raw_dir
+  combine_results: [combine_results.csv]
+  combine_tracking: [combine_tracking.csv]
+  players: [players.csv]
+  player_career_successes: [player_career_successes.csv]
+  games: [games.csv]
+  player_play: [player_play.csv]
+  game_tracking: [game_tracking_2023.csv, game_tracking_2024.csv, game_tracking_2025.csv]
+
+# Exact row counts of the raw files (profiled 2026-10-23). Bronze ingest must match these 1:1.
+expected_row_counts:
+  combine_results: 510
+  combine_tracking: 463189
+  players: 510
+  player_career_successes: 510
+  games: 1002
+  player_play: 314197
+  game_tracking: 22654290   # 3,665,443 + 7,827,944 + 11,160,903
+
+kinematics:
+  frame_hz: 10
+  smoother: savgol
+  window_frames: 7            # tuned in the kinematics validation notebook; candidates 5 / 7 / 9
+  polyorder: 2
+  max_speed_yds: 13.0         # implied speed above this -> frame flagged as teleport
+  max_accel_yds2: 15.0
+  max_interp_gap_frames: 2    # isolated bad frames are interpolated; longer runs break the segment
+  max_bad_frame_frac: 0.05    # attempt / player-play marked invalid above this
+  min_speed_for_heading_yds: 0.3
+  min_speed_for_ang_vel_yds: 1.0
+  max_turn_radius_yd: 100.0
+
+motion_onset:
+  speed_yds: 0.5
+  consecutive: 3
+
+cut_detection:
+  min_heading_change_deg: 45
+  reversal_heading_change_deg: 135
+  half_window_s: 0.25
+  min_entry_speed_yds: 2.0
+  merge_within_s: 0.4
+
+combine:
+  min_active_frames: 15
+  min_max_speed_yds: 1.5
+  min_players_analysable: 30
+  normalise_rotation_dist_yd: 2.0
+  mirror_first_lateral_yd: 1.0
+  ends_at_speed_yds: 3.0
+
+game:
+  season_types_traits: [REG, POST]
+  season_types_outcomes: [REG]
+  route_window_max_s: 4.0
+  rush_window_max_s: 4.0
+  block_window_max_s: 3.5
+  field_length_yd: 120.0
+  field_width_yd: 53.3
+
+thresholds:
+  min_attempts_consistency: 3
+  min_plays_trait_season: 15
+  min_plays_trait_career: 30
+
+draft:
+  udfa_pick_value: 262        # pseudo overall pick for undrafted players (last real pick = 257)
+  last_season: 2025           # seasons_available = last_season - draft_year + 1

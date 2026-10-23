@@ -1,0 +1,96 @@
+# Raw combine drill -> canonical drill. Spec: .ignored_plans/SILVER_GOLD_PLAN.md §2.2
+#
+# Key = (drill_type, drill_name) because the same drill_name can mean different things per position
+# (e.g. GAUNTLET_DRILL for DB vs WR/TE). All 62 (drill_type, drill_name) pairs in combine_tracking.csv
+# must be listed; silver_combine fails on an unknown pair.
+#
+# Fields
+#   canonical : merged name. Only spelling variants are merged, never different drills.
+#   family    : drives which feature extractors run (see features/combine_drills.py)
+#   side      : LEFT / RIGHT if encoded in the name, NONE otherwise. LEFT drills are mirrored in silver.
+#   mixed_side: true if the drill is run to both sides without the name saying so -> infer side per attempt
+#   variant   : sub-variant kept as a column when several raw drills pool into one canonical
+#   verify    : semantics not yet confirmed by animation (Phase 2). Features are provisional until false.
+#
+# position_group is derived from drill_type (SKILL_DRILLS_<GROUP>), ALL for the three general tests.
+# "analysable" is NOT hard-coded: computed at runtime as n_players >= combine.min_players_analysable.
+
+families: [LINEAR_SPRINT, COD_AGILITY, BACKPEDAL_BREAK, LATERAL_SHUFFLE, LATERAL_REACTION,
+           LATERAL_RUN_CATCH, PASS_RUSH, PASS_SET, PULL, RELEASE_SPRINT, BURST, ROUTE, BALL_SKILL]
+
+drills:
+  # ---- general tests ----------------------------------------------------------------------------
+  - {drill_type: FORTY_YARD_DASH,  drill_name: FORTY_YARD_DASH,  canonical: FORTY,         family: LINEAR_SPRINT, side: NONE}
+  - {drill_type: SHORT_SHUTTLE,    drill_name: SHORT_SHUTTLE,    canonical: SHORT_SHUTTLE, family: COD_AGILITY,   side: NONE}
+  - {drill_type: THREE_CONE_DRILL, drill_name: THREE_CONE_DRILL, canonical: THREE_CONE,    family: COD_AGILITY,   side: NONE}
+
+  # ---- DB -------------------------------------------------------------------------------------------
+  - {drill_type: SKILL_DRILLS_DB, drill_name: BACK_PEDAL_AND_90_DEGREE_BREAK_TO_BALL,       canonical: DB_BACKPEDAL_90_BREAK,      family: BACKPEDAL_BREAK,   side: NONE}
+  - {drill_type: SKILL_DRILLS_DB, drill_name: BACK_PEDAL_AND_TRANSITION_45_DEGREE_REACTION, canonical: DB_BACKPEDAL_45_TRANSITION, family: BACKPEDAL_BREAK,   side: NONE, mixed_side: true}
+  - {drill_type: SKILL_DRILLS_DB, drill_name: BOX_DRILL,                                    canonical: DB_BOX,                     family: COD_AGILITY,       side: NONE}
+  - {drill_type: SKILL_DRILLS_DB, drill_name: GAUNTLET_DRILL,                               canonical: DB_GAUNTLET,                family: LATERAL_RUN_CATCH, side: NONE}
+  - {drill_type: SKILL_DRILLS_DB, drill_name: LINE,                                         canonical: DB_LINE,                    family: BACKPEDAL_BREAK,   side: NONE, verify: true}
+  - {drill_type: SKILL_DRILLS_DB, drill_name: LINE_DRILL,                                   canonical: DB_LINE,                    family: BACKPEDAL_BREAK,   side: NONE, verify: true}
+  - {drill_type: SKILL_DRILLS_DB, drill_name: TERYL_AUSTIN_DRILL_1,                         canonical: DB_TERYL_AUSTIN_1,          family: BACKPEDAL_BREAK,   side: NONE, verify: true}
+  - {drill_type: SKILL_DRILLS_DB, drill_name: TERYL_AUSTIN_DRILL_2,                         canonical: DB_TERYL_AUSTIN_2,          family: BACKPEDAL_BREAK,   side: NONE, verify: true}
+  - {drill_type: SKILL_DRILLS_DB, drill_name: W_DRILL,                                      canonical: DB_W,                       family: BACKPEDAL_BREAK,   side: NONE}
+
+  # ---- DL -------------------------------------------------------------------------------------------
+  - {drill_type: SKILL_DRILLS_DL, drill_name: BACK_PEDAL_AND_REACT,                        canonical: BACKPEDAL_REACT, family: BACKPEDAL_BREAK,  side: NONE}
+  - {drill_type: SKILL_DRILLS_DL, drill_name: BODY_CONTROL_DRILL,                          canonical: DL_BODY_CONTROL, family: COD_AGILITY,      side: NONE}
+  - {drill_type: SKILL_DRILLS_DL, drill_name: FOUR_BAG_AGILITY_DRILL,                      canonical: DL_FOUR_BAG,     family: LATERAL_SHUFFLE,  side: NONE}
+  - {drill_type: SKILL_DRILLS_DL, drill_name: FRONT_START_WAVE_DRILL_AND_LATERAL_REACTION, canonical: DL_WAVE_LATERAL, family: LATERAL_REACTION, side: NONE}
+  - {drill_type: SKILL_DRILLS_DL, drill_name: PASS_RUSH_DRILL,                             canonical: PASS_RUSH_BEND,  family: PASS_RUSH,        side: NONE, mixed_side: true}
+  - {drill_type: SKILL_DRILLS_DL, drill_name: RUN_AND_CLUB_DRILL,                          canonical: DL_RUN_AND_CLUB, family: PASS_RUSH,        side: NONE}
+  - {drill_type: SKILL_DRILLS_DL, drill_name: RUN_THE_HOOP_DRILL,                          canonical: DL_HOOP,         family: PASS_RUSH,        side: NONE}
+  - {drill_type: SKILL_DRILLS_DL, drill_name: SHORT_ZONE_BREAKS,                           canonical: ZONE_BREAK,      family: BACKPEDAL_BREAK,  side: NONE, variant: ALL}
+  - {drill_type: SKILL_DRILLS_DL, drill_name: SHORT_ZONE_BREAK_FLAT_WHEEL,                 canonical: ZONE_BREAK,      family: BACKPEDAL_BREAK,  side: NONE, variant: FLAT_WHEEL}
+  - {drill_type: SKILL_DRILLS_DL, drill_name: SHORT_ZONE_BREAK_FORWARD,                    canonical: ZONE_BREAK,      family: BACKPEDAL_BREAK,  side: NONE, variant: FORWARD}
+  - {drill_type: SKILL_DRILLS_DL, drill_name: SHORT_ZONE_BREAK_INSIDE,                     canonical: ZONE_BREAK,      family: BACKPEDAL_BREAK,  side: NONE, variant: INSIDE}
+
+  # ---- LB (3-4 players each: kept in silver, never analysable) --------------------------------------
+  - {drill_type: SKILL_DRILLS_LB, drill_name: BACK_PEDAL_AND_REACT,         canonical: BACKPEDAL_REACT,       family: BACKPEDAL_BREAK,  side: NONE}
+  - {drill_type: SKILL_DRILLS_LB, drill_name: FOUR_BAG_SHUFFLE_DRILL,       canonical: LB_FOUR_BAG_SHUFFLE,   family: LATERAL_SHUFFLE,  side: NONE}
+  - {drill_type: SKILL_DRILLS_LB, drill_name: PASS_RUSH_DRILL,              canonical: PASS_RUSH_BEND,        family: PASS_RUSH,        side: NONE, mixed_side: true}
+  - {drill_type: SKILL_DRILLS_LB, drill_name: SHORT_ZONE_BREAKS,            canonical: ZONE_BREAK,            family: BACKPEDAL_BREAK,  side: NONE, variant: ALL}
+  - {drill_type: SKILL_DRILLS_LB, drill_name: SHUFFLE_SPRINT_AND_COD_DRILL, canonical: LB_SHUFFLE_SPRINT_COD, family: COD_AGILITY,      side: NONE}
+  - {drill_type: SKILL_DRILLS_LB, drill_name: WAVE_DRILL,                   canonical: LB_WAVE,               family: LATERAL_REACTION, side: NONE}
+
+  # ---- OL -------------------------------------------------------------------------------------------
+  - {drill_type: SKILL_DRILLS_OL, drill_name: FIVE_YARD_WAVE_DRILL_SLIDE_AND_SHUFFLE, canonical: OL_WAVE_SLIDE,      family: LATERAL_SHUFFLE,  side: NONE}
+  - {drill_type: SKILL_DRILLS_OL, drill_name: OL_PULL_DRILL_DEEP_SHORT_PULL_LEFT,     canonical: OL_PULL_DEEP_SHORT, family: PULL,             side: LEFT}
+  - {drill_type: SKILL_DRILLS_OL, drill_name: OL_PULL_DRILL_FOLD_BLOCK_RIGHT,         canonical: OL_PULL_FOLD,       family: PULL,             side: RIGHT}
+  - {drill_type: SKILL_DRILLS_OL, drill_name: OL_PULL_DRILL_LONG_PULL_RIGHT,          canonical: OL_PULL_LONG,       family: PULL,             side: RIGHT}
+  - {drill_type: SKILL_DRILLS_OL, drill_name: PASS_PRO-MIRROR_DRILL,                  canonical: OL_MIRROR,          family: LATERAL_REACTION, side: NONE, mixed_side: true}
+  - {drill_type: SKILL_DRILLS_OL, drill_name: PASS_PRO_MIRROR_DRILL,                  canonical: OL_MIRROR,          family: LATERAL_REACTION, side: NONE, mixed_side: true}
+  - {drill_type: SKILL_DRILLS_OL, drill_name: PASS_RUSH_DROP,                         canonical: OL_PASS_SET,        family: PASS_SET,         side: NONE, verify: true}
+  - {drill_type: SKILL_DRILLS_OL, drill_name: SCREEN_DRILL,                           canonical: OL_SCREEN,          family: RELEASE_SPRINT,   side: NONE}
+
+  # ---- TE -------------------------------------------------------------------------------------------
+  - {drill_type: SKILL_DRILLS_TE, drill_name: BLOCK_EXPLOSION,          canonical: TE_BLOCK_EXPLOSION, family: BURST,             side: NONE}
+  - {drill_type: SKILL_DRILLS_TE, drill_name: CORNER_ROUTE,             canonical: ROUTE_CORNER,       family: ROUTE,             side: NONE, mixed_side: true}
+  - {drill_type: SKILL_DRILLS_TE, drill_name: END_ZONE_FADE_RIGHT,      canonical: ROUTE_FADE,         family: ROUTE,             side: RIGHT}
+  - {drill_type: SKILL_DRILLS_TE, drill_name: FLAT_ROUTE_LEFT,          canonical: ROUTE_FLAT,         family: ROUTE,             side: LEFT}
+  - {drill_type: SKILL_DRILLS_TE, drill_name: GAUNTLET_DRILL,           canonical: GAUNTLET,           family: LATERAL_RUN_CATCH, side: NONE}
+  - {drill_type: SKILL_DRILLS_TE, drill_name: HOOK_ROUTE_RIGHT,         canonical: ROUTE_HOOK,         family: ROUTE,             side: RIGHT}
+  - {drill_type: SKILL_DRILLS_TE, drill_name: IN_ROUTE_LEFT,            canonical: ROUTE_IN,           family: ROUTE,             side: LEFT}
+  - {drill_type: SKILL_DRILLS_TE, drill_name: OVER_SHOULDER_ADJUST,     canonical: OVER_SHOULDER,      family: BALL_SKILL,        side: NONE}
+  - {drill_type: SKILL_DRILLS_TE, drill_name: OVER_THE_SHOULDER_ADJUST, canonical: OVER_SHOULDER,      family: BALL_SKILL,        side: NONE}
+  - {drill_type: SKILL_DRILLS_TE, drill_name: WHEEL_ROUTE_LEFT,         canonical: ROUTE_WHEEL,        family: ROUTE,             side: LEFT}
+
+  # ---- WR -------------------------------------------------------------------------------------------
+  - {drill_type: SKILL_DRILLS_WR, drill_name: CIRCUS_ROUTE_LEFT,       canonical: ROUTE_CIRCUS,        family: BALL_SKILL,        side: LEFT}
+  - {drill_type: SKILL_DRILLS_WR, drill_name: COMEBACK_ROUTE_RIGHT,    canonical: ROUTE_COMEBACK,      family: ROUTE,             side: RIGHT}
+  - {drill_type: SKILL_DRILLS_WR, drill_name: CURL_ROUTE_RIGHT,        canonical: ROUTE_CURL,          family: ROUTE,             side: RIGHT}
+  - {drill_type: SKILL_DRILLS_WR, drill_name: DAGGER_ROUTE_LEFT,       canonical: ROUTE_DAGGER,        family: ROUTE,             side: LEFT}
+  - {drill_type: SKILL_DRILLS_WR, drill_name: GAUNTLET_DRILL,          canonical: GAUNTLET,            family: LATERAL_RUN_CATCH, side: NONE}
+  - {drill_type: SKILL_DRILLS_WR, drill_name: GO_ROUTE_RIGHT,          canonical: ROUTE_GO,            family: ROUTE,             side: RIGHT}
+  - {drill_type: SKILL_DRILLS_WR, drill_name: OVER_SHOULDER_ADJUST,    canonical: OVER_SHOULDER,       family: BALL_SKILL,        side: NONE}
+  - {drill_type: SKILL_DRILLS_WR, drill_name: POST_CORNER_ROUTE_LEFT,  canonical: ROUTE_POST_CORNER,   family: ROUTE,             side: LEFT}
+  - {drill_type: SKILL_DRILLS_WR, drill_name: POST_CORNER_ROUTE_RIGHT, canonical: ROUTE_POST_CORNER,   family: ROUTE,             side: RIGHT}
+  - {drill_type: SKILL_DRILLS_WR, drill_name: RED_ZONE_FADE_RIGHT,     canonical: ROUTE_RED_ZONE_FADE, family: ROUTE,             side: RIGHT}
+  - {drill_type: SKILL_DRILLS_WR, drill_name: SLANT_ROUTE_LEFT,        canonical: ROUTE_SLANT,         family: ROUTE,             side: LEFT}
+  - {drill_type: SKILL_DRILLS_WR, drill_name: SLOT_SAIL_ROUTE_RIGHT,   canonical: ROUTE_SLOT_SAIL,     family: ROUTE,             side: RIGHT}
+  - {drill_type: SKILL_DRILLS_WR, drill_name: SLOT_STRIKE_ROUTE_LEFT,  canonical: ROUTE_SLOT_STRIKE,   family: ROUTE,             side: LEFT}
+  - {drill_type: SKILL_DRILLS_WR, drill_name: SPEED_OUT_LEFT,          canonical: ROUTE_SPEED_OUT,     family: ROUTE,             side: LEFT}
+  - {drill_type: SKILL_DRILLS_WR, drill_name: SPEED_OUT_ROUTE_LEFT,    canonical: ROUTE_SPEED_OUT,     family: ROUTE,             side: LEFT}

@@ -1,0 +1,29 @@
+bundle:
+  name: nflcombine
+
+include:
+  - resources/*.yml
+
+artifacts:
+  nflcombine_wheel:
+    type: whl
+    build: python -m pip wheel --no-deps --wheel-dir dist .
+    path: .
+
+variables:
+  catalog:
+    description: Unity Catalog catalog holding bronze/silver/gold schemas
+    default: bdb2027
+  raw_dir:
+    description: UC Volume path with the raw Kaggle CSVs
+    default: /Volumes/bdb2027/bronze/raw
+
+targets:
+  dev:
+    mode: development
+    default: true
+
+  prod:
+    mode: production
+    variables:
+      catalog: bdb2027

@@ -1,0 +1,56 @@
+# One job = the full medallion rebuild. Task names match `nflcombine --task <name>` (see src/nflcombine/cli.py).
+# Runs on serverless jobs compute; the wheel built by the bundle is the only dependency.
+resources:
+  jobs:
+    pipeline:
+      name: nflcombine-pipeline
+      max_concurrent_runs: 1
+
+      environments:
+        - environment_key: default
+          spec:
+            client: "2"
+            dependencies:
+              - ../dist/*.whl
+
+      tasks:
+        - task_key: bronze
+          environment_key: default
+          python_wheel_task:
+            package_name: nflcombine
+            entry_point: nflcombine
+            parameters: ["--task", "bronze", "--catalog", "${var.catalog}", "--raw-dir", "${var.raw_dir}"]
+
+        - task_key: silver_reference
+          depends_on: [{task_key: bronze}]
+          environment_key: default
+          python_wheel_task:
+            package_name: nflcombine
+            entry_point: nflcombine
+            parameters: ["--task", "silver_reference", "--catalog", "${var.catalog}"]
+
+        - task_key: silver_combine
+          depends_on: [{task_key: silver_reference}]
+          environment_key: default
+          python_wheel_task:
+            package_name: nflcombine
+            entry_point: nflcombine
+            parameters: ["--task", "silver_combine", "--catalog", "${var.catalog}"]
+
+        - task_key: silver_game_pp
+          depends_on: [{task_key: silver_reference}]
+          environment_key: default
+          python_wheel_task:
+            package_name: nflcombine
+            entry_point: nflcombine
+            parameters: ["--task", "silver_game_pp", "--catalog", "${var.catalog}"]
+
+        - task_key: silver_game_frames
+          depends_on: [{task_key: silver_game_pp}]
+          environment_key: default
+          python_wheel_task:
+            package_name: nflcombine
+            entry_point: nflcombine
+            parameters: ["--task", "silver_game_frames", "--catalog", "${var.catalog}"]
+
+        # Gold tasks get added once the silver layer is reviewed (see .ignored_plans/DE_TASKS.md).

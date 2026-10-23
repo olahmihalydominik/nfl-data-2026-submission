@@ -1,0 +1,208 @@
+# Outcome metric catalog. Spec: .ignored_plans/SILVER_GOLD_PLAN.md §4.7-4.8
+#
+# Every expression is Spark SQL evaluated on silver.player_play rows that pass `base_filter`
+# for the outcome season types (conf/pipeline.yaml game.season_types_outcomes).
+#
+# Fields
+#   groups      : position groups the metric is MODELLED for (others may still get it, reported only)
+#   kind        : count | rate (Σnum/Σden, bounded 0..1) | ratio (Σnum/Σden, unbounded) | mean (avg of value)
+#   opp_filter  : rows that count as an opportunity (the denominator population)
+#   numerator   : summed per opportunity row (rate/ratio) | value : averaged (mean)
+#   shrinkage   : beta_binomial | normal | none
+#   min_opps    : minimum opportunities for `meets_min_opps`
+#   higher_is_better : sign for gem/bust labelling
+#   strength    : strong | weak  (weak = team-level / not individually attributable; never a headline target)
+
+base_filter: "NOT is_nullified AND NOT is_special_down"
+
+metrics:
+  # ---- participation (all groups) ---------------------------------------------------------------
+  reg_snaps:
+    groups: [WR, TE, OL, DL, DB]
+    kind: count
+    opp_filter: "true"
+    shrinkage: none
+    higher_is_better: true
+    strength: strong
+
+  # ---- receivers --------------------------------------------------------------------------------
+  targets_per_route:
+    groups: [WR, TE]
+    kind: rate
+    opp_filter: "is_route"
+    numerator: "CAST(target AS INT)"
+    shrinkage: beta_binomial
+    min_opps: 50
+    higher_is_better: true
+    strength: strong
+  yards_per_route_run:
+    groups: [WR, TE]
+    kind: ratio
+    opp_filter: "is_route"
+    numerator: "coalesce(rec_yards, 0)"
+    shrinkage: normal
+    min_opps: 50
+    higher_is_better: true
+    strength: strong
+  separation_at_throw:
+    groups: [WR, TE]
+    kind: mean
+    opp_filter: "is_route AND separation_at_pass_forward IS NOT NULL"
+    value: "separation_at_pass_forward"
+    shrinkage: normal
+    min_opps: 50
+    higher_is_better: true
+    strength: strong
+  epa_per_target:
+    groups: [WR, TE]
+    kind: mean
+    opp_filter: "is_route AND target"
+    value: "expected_points_added"
+    shrinkage: normal
+    min_opps: 15
+    higher_is_better: true
+    strength: strong
+  catch_rate:
+    groups: [WR, TE]
+    kind: rate
+    opp_filter: "is_route AND target"
+    numerator: "CAST(pass_result = 'C' AS INT)"
+    shrinkage: beta_binomial
+    min_opps: 15
+    higher_is_better: true
+    strength: strong
+  yac_over_expected:
+    groups: [WR, TE]
+    kind: mean
+    opp_filter: "yac_over_expected IS NOT NULL"
+    value: "yac_over_expected"
+    shrinkage: normal
+    min_opps: 15
+    higher_is_better: true
+    strength: strong
+
+  # ---- pass blocking ----------------------------------------------------------------------------
+  pressure_allowed_rate:
+    groups: [OL]
+    kind: rate
+    opp_filter: "is_pass_block"
+    numerator: "CAST(pressure_allowed AS INT)"
+    shrinkage: beta_binomial
+    min_opps: 100
+    higher_is_better: false
+    strength: strong
+  sack_allowed_rate:
+    groups: [OL]
+    kind: rate
+    opp_filter: "is_pass_block"
+    numerator: "coalesce(sack_allowed, 0)"
+    shrinkage: beta_binomial
+    min_opps: 100
+    higher_is_better: false
+    strength: strong
+  peak_pressure_prob_allowed:
+    groups: [OL]
+    kind: mean
+    opp_filter: "is_pass_block AND peak_pressure_probability_allowed IS NOT NULL"
+    value: "peak_pressure_probability_allowed"
+    shrinkage: normal
+    min_opps: 100
+    higher_is_better: false
+    strength: strong
+
+  # ---- pass rush / run defence --------------------------------------------------------------------
+  pressure_rate:
+    groups: [DL]
+    kind: rate
+    opp_filter: "is_pass_rush"
+    numerator: "CAST(pressure_generated AS INT)"
+    shrinkage: beta_binomial
+    min_opps: 75
+    higher_is_better: true
+    strength: strong
+  sack_rate:
+    groups: [DL]
+    kind: rate
+    opp_filter: "is_pass_rush"
+    numerator: "coalesce(sack, 0)"
+    shrinkage: beta_binomial
+    min_opps: 75
+    higher_is_better: true
+    strength: strong
+  quick_pressure_rate:
+    groups: [DL]
+    kind: rate
+    opp_filter: "is_pass_rush"
+    numerator: "CAST(pressure_generated AND time_to_pressure <= 2.5 AS INT)"
+    shrinkage: beta_binomial
+    min_opps: 75
+    higher_is_better: true
+    strength: strong
+  get_off:
+    groups: [DL]
+    kind: mean
+    opp_filter: "is_pass_rush"
+    value: "player_get_off"
+    shrinkage: normal
+    min_opps: 75
+    higher_is_better: false
+    strength: strong
+  run_stop_rate:
+    groups: [DL]
+    kind: ratio
+    opp_filter: "is_run_defense"
+    numerator: "tackle_n + 0.5 * assist_n"
+    shrinkage: normal
+    min_opps: 100
+    higher_is_better: true
+    strength: strong
+  tfl_rate:
+    groups: [DL]
+    kind: rate
+    opp_filter: "is_run_defense"
+    numerator: "tfl_n"
+    shrinkage: beta_binomial
+    min_opps: 100
+    higher_is_better: true
+    strength: strong
+
+  # ---- coverage / tackling ------------------------------------------------------------------------
+  tackle_rate:
+    groups: [DB]
+    kind: ratio
+    opp_filter: "side_of_ball = 'DEFENSE'"
+    numerator: "tackle_n + 0.5 * assist_n"
+    shrinkage: normal
+    min_opps: 100
+    higher_is_better: true
+    strength: strong
+  tfl_ff_rate:
+    groups: [DB]
+    kind: rate
+    opp_filter: "side_of_ball = 'DEFENSE'"
+    numerator: "LEAST(tfl_n + ff_n, 1)"
+    shrinkage: beta_binomial
+    min_opps: 100
+    higher_is_better: true
+    strength: strong
+  team_epa_allowed_in_coverage:
+    groups: [DB]
+    kind: mean
+    opp_filter: "is_coverage AND is_dropback"
+    value: "-epa_player_persp"   # EPA allowed (offense perspective), lower is better
+    shrinkage: normal
+    min_opps: 75
+    higher_is_better: false
+    strength: weak
+
+# Career-level targets computed from silver.dim_player (not from player_play).
+career_targets:
+  played_any:              {source: "reg_snaps > 0", higher_is_better: true}
+  snaps_per_season_avail:  {source: "career_total_snaps / seasons_available", higher_is_better: true}
+  games_started_rate:      {source: "career_games_started_rate", higher_is_better: true}
+  all_pro_or_pro_bowl:     {source: "ap_all_pro_1st_team + ap_all_pro_2nd_team + pro_bowl_original_ballot > 0", higher_is_better: true, descriptive_only: true}
+
+# Value over draft slot: residual of each *_eb metric on these covariates, fitted within position group,
+# out-of-fold by draft_year.
+vods_covariates: [log_draft_pick, is_udfa, draft_year]
+gem_bust_quantile: 0.2

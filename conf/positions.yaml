@@ -1,0 +1,49 @@
+# Position definitions. Spec: .ignored_plans/SILVER_GOLD_PLAN.md §2.3
+
+# Primary modelling group = combine_position. There is no LB combine position in this data.
+position_groups: [WR, TE, OL, DL, DB]
+
+# Reporting sub-groups: assigned from players.nfl_position first, then overridden by the dominant
+# lined_up_position when the player has >= override_min_snaps REG snaps and the two disagree.
+subgroup_override_min_snaps: 100
+position_subgroups:
+  CB:         {group: DB, nfl_position: [CB],          lined_up: [CB, SLOT_CB]}
+  S:          {group: DB, nfl_position: [SS, FS, DB],  lined_up: [HIGH_SAFETY, BOX_SAFETY]}
+  LB_FROM_DB: {group: DB, nfl_position: [ILB, MLB, RB], lined_up: [MLB, OLB]}
+  EDGE:       {group: DL, nfl_position: [DE, OLB],     lined_up: [EDGE, OLB]}
+  IDL:        {group: DL, nfl_position: [DT, NT],      lined_up: [INTERIOR_LINE]}
+  OT:         {group: OL, nfl_position: [T],           lined_up: [T]}
+  IOL:        {group: OL, nfl_position: [G, C],        lined_up: [G, C]}
+  WR:         {group: WR, nfl_position: [WR],          lined_up: [WR, SLOT_WR]}
+  TE:         {group: TE, nfl_position: [TE, FB],      lined_up: [TE]}
+
+# Per-play role from player_play.lined_up_position (null -> UNKNOWN).
+lined_up_roles:
+  OUTSIDE_WR:  [WR]
+  SLOT_WR:     [SLOT_WR]
+  INLINE_TE:   [TE]
+  BACKFIELD:   [RB, FB]
+  OT:          [T]
+  IOL:         [G, C, EXTRA_OL]
+  EDGE:        [EDGE]
+  IDL:         [INTERIOR_LINE]
+  OFF_BALL_LB: [OLB, MLB]
+  OUTSIDE_CB:  [CB]
+  SLOT_CB:     [SLOT_CB]
+  SAFETY:      [HIGH_SAFETY, BOX_SAFETY]
+
+# player_play.route_ran -> route family used to compare combine routes with game routes.
+route_families:
+  VERTICAL:       [GO]
+  VERTICAL_BREAK: [POST, CORNER, WHEEL]
+  INSIDE_BREAK:   [SLANT, IN, CROSS, ANGLE]
+  OUTSIDE_BREAK:  [OUT, FLAT]
+  STOP:           [HITCH]
+  SCREEN:         [SCREEN]
+
+power_conferences:
+  - Southeastern Conference
+  - Big Ten Conference
+  - Big 12 Conference
+  - Atlantic Coast Conference
+  - Pac-12 Conference
