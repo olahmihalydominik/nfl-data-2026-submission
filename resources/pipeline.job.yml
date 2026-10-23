@@ -9,7 +9,8 @@ resources:
       environments:
         - environment_key: default
           spec:
-            client: "2"
+            # doesn't upgrade runtime libs (env 2 had numpy 1.23 / pandas 1.5 and broke pyarrow on upgrade).
+            environment_version: "4"
             dependencies:
               - ../dist/*.whl
 
