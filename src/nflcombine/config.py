@@ -48,8 +48,10 @@ def config_hash() -> str:
 
 @dataclass(frozen=True)
 class Settings:
-    catalog: str = field(default_factory=lambda: os.environ.get("NFL_CATALOG", "bdb2027"))
-    raw_dir: str = field(default_factory=lambda: os.environ.get("NFL_RAW_DIR", "/Volumes/bdb2027/bronze/raw"))
+    catalog: str = field(default_factory=lambda: os.environ.get("NFL_CATALOG", "kaggle-nfl"))
+    raw_dir: str = field(
+        default_factory=lambda: os.environ.get("NFL_RAW_DIR", "/Volumes/kaggle-nfl/bronze/raw_data")
+    )
     pipeline_version: str = field(default_factory=lambda: os.environ.get("NFL_PIPELINE_VERSION", __version__))
 
     @property
@@ -57,9 +59,12 @@ class Settings:
         return load_yaml("pipeline.yaml")
 
     def table(self, layer: str, name: str) -> str:
-        """Fully qualified UC table name, e.g. settings.table("silver", "dim_player")."""
+        """Fully qualified UC table name, backtick-quoted because the catalog contains '-'.
+
+        settings.table("silver", "dim_player") -> `kaggle-nfl`.`silver`.`dim_player`
+        """
         schema = self.pipeline["schemas"][layer]
-        return f"{self.catalog}.{schema}.{name}"
+        return ".".join(f"`{part}`" for part in (self.catalog, schema, name))
 
     def raw_paths(self, bronze_table: str) -> list[str]:
         return [f"{self.raw_dir.rstrip('/')}/{f}" for f in self.pipeline["raw_files"][bronze_table]]

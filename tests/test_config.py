@@ -56,7 +56,7 @@ def test_outcome_metrics_well_formed():
 
 def test_settings_table_names():
     s = Settings(catalog="cat")
-    assert s.table("silver", "dim_player") == "cat.silver.dim_player"
+    assert s.table("silver", "dim_player") == "`cat`.`silver`.`dim_player`"
     assert s.raw_paths("game_tracking")[0].endswith("game_tracking_2023.csv")
     assert len(config_hash()) == 12
 

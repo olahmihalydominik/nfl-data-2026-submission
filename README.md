@@ -40,4 +40,4 @@ databricks bundle deploy -t dev
 databricks bundle run -t dev pipeline
 ```
 
-Raw CSVs go to the UC volume `/Volumes/bdb2027/bronze/raw/`. They are never committed.
+Raw CSVs go to the UC volume `/Volumes/kaggle-nfl/bronze/raw_data/`. They are never committed.

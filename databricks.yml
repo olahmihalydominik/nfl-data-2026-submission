@@ -13,10 +13,10 @@ artifacts:
 variables:
   catalog:
     description: Unity Catalog catalog holding bronze/silver/gold schemas
-    default: bdb2027
+    default: kaggle-nfl
   raw_dir:
     description: UC Volume path with the raw Kaggle CSVs
-    default: /Volumes/bdb2027/bronze/raw
+    default: /Volumes/kaggle-nfl/bronze/raw_data
 
 targets:
   dev:
@@ -26,4 +26,4 @@ targets:
   prod:
     mode: production
     variables:
-      catalog: bdb2027
+      catalog: kaggle-nfl
