@@ -218,3 +218,14 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local plans
+.ignored_plans/
+
+# Raw competition data is never committed
+/data/
+nfl-big-data-bowl-2027/
+*.zip
+
+# Databricks bundle state
+.databricks/
