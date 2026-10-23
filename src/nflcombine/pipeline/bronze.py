@@ -13,6 +13,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import pyspark.sql.functions as F
+
+from nflcombine.io.delta import write_table
+from nflcombine.io.schemas import BRONZE_SCHEMAS
+
 if TYPE_CHECKING:
     from pyspark.sql import DataFrame, SparkSession
 
@@ -20,9 +25,42 @@ if TYPE_CHECKING:
 
 
 def read_raw(spark: SparkSession, settings: Settings, table: str) -> DataFrame:
-    """Read the raw CSV(s) for `table` with the explicit schema."""
-    raise NotImplementedError("DE-02")
+    """Read the raw CSVs for `table` with the explicit schema."""
+    df = (
+        spark.read.format("csv")
+        .schema(BRONZE_SCHEMAS[table])
+        .option("header", "true")
+        .option("nullValue", "NA")
+        .option("timestampFormat", "yyyy-MM-dd'T'HH:mm:ss.SSS")
+        .load(settings.raw_paths(table))
+    )
+    if table == "game_tracking":
+        df = df.withColumn(
+            "source_file",
+            F.element_at(F.split(F.col("_metadata.file_path"), "/"), -1),
+        )
+    return df
 
 
 def run(spark: SparkSession, settings: Settings) -> None:
-    raise NotImplementedError("DE-02")
+    for table in settings.raw_files:
+        df = read_raw(spark, settings, table)
+
+        # Acceptance: a wrong timestampFormat parses silently to null, so
+        # assert zero null `time` values explicitly instead of trusting the write.
+        if "time" in df.columns:
+            null_times = df.where(F.col("time").isNull()).count()
+            if null_times:
+                raise ValueError(
+                    f"bronze.{table}: {null_times} null 'time' values "
+                    f"(timestamp parse failures)"
+                )
+
+        fqn = write_table(df, settings, "bronze", table)
+
+        actual = spark.table(fqn).count()
+        expected = settings.expected_row_counts[table]
+        if actual != expected:
+            raise ValueError(
+                f"bronze.{table}: expected {expected} rows, wrote {actual}"
+            )
